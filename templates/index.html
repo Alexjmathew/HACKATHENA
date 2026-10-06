@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Upload transactions, get a fraud report</h1>
+  <p>Drop a <code>transactions.csv</code>. The trained neural network scores every invoice and builds a report.</p>
+  <form action="{{ url_for('do_analyze') }}" method="post" enctype="multipart/form-data" class="upload" id="f">
+    <label class="drop" id="drop">
+      <input type="file" name="file" accept=".csv" required id="file">
+      <strong id="fname">Choose a CSV file</strong>
+      <span>Required columns: <code>seller_gstin</code>, <code>buyer_gstin</code>, <code>amount</code></span>
+    </label>
+    <button class="btn" type="submit" onclick="this.textContent='Analysing…'">Generate report</button>
+  </form>
+  <p class="muted">No file handy? <a href="{{ url_for('sample') }}">Download a sample transactions.csv</a></p>
+</section>
+<section class="grid2">
+  <div class="card"><h3>Model</h3>
+    <p class="muted">{{ meta.architecture }}</p>
+    <div class="kv"><span>ROC-AUC</span><b>{{ meta.roc_auc }}</b></div>
+    <div class="kv"><span>Precision</span><b>{{ meta.precision }}</b></div>
+    <div class="kv"><span>Recall</span><b>{{ meta.recall }}</b></div>
+  </div>
+  <div class="card"><h3>Optional columns</h3>
+    <p class="muted">More columns give better scores:</p>
+    <p><code>invoice_id</code> <code>invoice_date</code> <code>tax_rate</code> <code>itc_amount</code> <code>seller_age_days</code></p>
+  </div>
+</section>
+<script>
+document.getElementById('file').addEventListener('change',e=>{
+  document.getElementById('fname').textContent=e.target.files[0]?e.target.files[0].name:'Choose a CSV file';});
+</script>
+{% endblock %}

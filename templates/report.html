@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Report - {{ filename }}{% endblock %}
+{% block content %}
+<div class="rhead">
+  <div><h1>Fraud Analysis Report</h1>
+  <p class="muted">{{ filename }} · scanned {{ now }}</p></div>
+  <div class="actions">
+    <a class="btn ghost" href="{{ url_for('download', rid=rid) }}">Download flagged CSV</a>
+    <button class="btn" onclick="window.print()">Print / Save PDF</button>
+  </div>
+</div>
+
+<section class="cards">
+  <div class="stat"><span>Transactions</span><b>{{ "{:,}".format(s.total) }}</b></div>
+  <div class="stat danger"><span>Flagged</span><b>{{ "{:,}".format(s.flagged) }}</b><em>{{ s.flag_rate }}% of total</em></div>
+  <div class="stat danger"><span>High risk</span><b>{{ "{:,}".format(s.high) }}</b></div>
+  <div class="stat"><span>Flagged value</span><b>{{ s.flagged_amount|inr }}</b></div>
+  <div class="stat warn"><span>ITC at risk</span><b>{{ s.itc_at_risk|inr }}</b></div>
+</section>
+
+<section class="card">
+  <h3>Risk distribution</h3>
+  {% for name, n, cls in [("High", s.high, "high"), ("Medium", s.medium, "med"), ("Low", s.low, "low")] %}
+  <div class="bar-row"><span>{{ name }}</span>
+    <div class="track"><div class="fill {{ cls }}" style="width: {{ (100 * n / s.total) if s.total else 0 }}%"></div></div>
+    <b>{{ "{:,}".format(n) }}</b></div>
+  {% endfor %}
+</section>
+
+<section class="card">
+  <h3>Top 25 suspicious transactions</h3>
+  <div class="scroll"><table>
+    <thead><tr><th>Invoice</th><th>Seller</th><th>Buyer</th><th class="r">Amount</th><th>Risk</th><th>Why it looks suspicious</th></tr></thead>
+    <tbody>
+    {% for t in top %}
+      <tr><td>{{ t.id }}</td><td class="mono">{{ t.seller }}</td><td class="mono">{{ t.buyer }}</td>
+        <td class="r">{{ t.amount|inr }}</td>
+        <td><span class="pill {{ t.level|lower }}">{{ t.level }} · {{ t.pct }}%</span></td>
+        <td>{% for i in t.indicators %}<span class="tag">{{ i }}</span>{% endfor %}</td></tr>
+    {% endfor %}
+    </tbody></table></div>
+</section>
+
+<section class="grid2">
+  <div class="card"><h3>Sellers with most flagged invoices</h3>
+    {% if sellers %}<div class="scroll"><table>
+      <thead><tr><th>Seller GSTIN</th><th class="r">Flagged</th><th class="r">Avg risk</th><th class="r">Value</th></tr></thead>
+      <tbody>{% for r in sellers %}<tr><td class="mono">{{ r.gstin }}</td><td class="r">{{ r.flagged }} / {{ r.total }}</td>
+        <td class="r">{{ r.avg }}%</td><td class="r">{{ r.amount|inr }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<p class="muted">No sellers flagged.</p>{% endif %}</div>
+  <div class="card"><h3>Two-way (circular) trading pairs</h3>
+    {% if pairs %}<div class="scroll"><table>
+      <thead><tr><th>Party A</th><th>Party B</th><th class="r">Flagged inv.</th><th class="r">Value</th></tr></thead>
+      <tbody>{% for p in pairs %}<tr><td class="mono">{{ p.a }}</td><td class="mono">{{ p.b }}</td>
+        <td class="r">{{ p.n }}</td><td class="r">{{ p.v|inr }}</td></tr>{% endfor %}</tbody></table></div>
+    {% else %}<p class="muted">No two-way flagged pairs found.</p>{% endif %}</div>
+</section>
+
+{% if check %}
+<section class="card"><h3>Accuracy on this file (labels were present)</h3>
+  <div class="kv"><span>Accuracy</span><b>{{ check.acc }}%</b></div>
+  <div class="kv"><span>Precision</span><b>{{ check.prec }}%</b></div>
+  <div class="kv"><span>Recall</span><b>{{ check.rec }}%</b></div>
+  <p class="muted">TP {{ check.tp }} · FP {{ check.fp }} · FN {{ check.fn }} · TN {{ check.tn }}</p></section>
+{% endif %}
+
+<section class="grid2">
+  <div class="card"><h3>Model performance (held-out test)</h3>
+    <p class="muted">{{ meta.architecture }}</p>
+    <div class="kv"><span>ROC-AUC</span><b>{{ meta.roc_auc }}</b></div>
+    <div class="kv"><span>Precision</span><b>{{ meta.precision }}</b></div>
+    <div class="kv"><span>Recall</span><b>{{ meta.recall }}</b></div>
+    <div class="kv"><span>F1</span><b>{{ meta.f1 }}</b></div></div>
+  <div class="card"><h3>What the network relies on most</h3>
+    {% set mx = meta.feature_importance[0].auc_drop or 1 %}
+    {% for f in meta.feature_importance[:6] %}
+    <div class="bar-row"><span class="w">{{ f.feature }}</span>
+      <div class="track"><div class="fill low" style="width: {{ [100 * f.auc_drop / mx, 2]|max }}%"></div></div></div>
+    {% endfor %}</div>
+</section>
+{% endblock %}

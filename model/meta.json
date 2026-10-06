@@ -1,0 +1,50 @@
+{
+  "architecture": "Dense 64 > Dropout > 32 > Dropout > 16 > Sigmoid (Keras)",
+  "train_rows": 16000,
+  "test_rows": 4000,
+  "precision": 0.9569,
+  "recall": 1.0,
+  "f1": 0.978,
+  "roc_auc": 0.9999,
+  "pr_auc": 0.9991,
+  "confusion": {
+    "tn": 3582,
+    "fp": 18,
+    "fn": 0,
+    "tp": 400
+  },
+  "feature_importance": [
+    {
+      "feature": "itc_ratio",
+      "auc_drop": 0.4007
+    },
+    {
+      "feature": "itc_excess",
+      "auc_drop": 0.0464
+    },
+    {
+      "feature": "near_threshold",
+      "auc_drop": 0.0355
+    },
+    {
+      "feature": "seller_unique_buyers",
+      "auc_drop": 0.0146
+    },
+    {
+      "feature": "pair_txn_count",
+      "auc_drop": 0.0055
+    },
+    {
+      "feature": "log_seller_volume",
+      "auc_drop": 0.004
+    },
+    {
+      "feature": "round_amount",
+      "auc_drop": 0.0011
+    },
+    {
+      "feature": "seller_txn_count",
+      "auc_drop": 0.0006
+    }
+  ]
+}
